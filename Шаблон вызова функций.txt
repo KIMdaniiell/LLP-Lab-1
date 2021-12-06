@@ -1,0 +1,18 @@
+
+[Теория]
+• Callee-saved registers must be restored by the procedure being called. So, if it needs 
+to change them, it has to change them back.
+These registers are callee-saved: rbx, rbp, rsp, r12-r15, a total of seven registers.
+• Caller-saved registers should be saved before invoking a function and restored after. One 
+does not have to save and restore them if their value will not be of importance after.
+All other registers are caller-saved.
+
+
+[Алгоритм]
+So, the pattern of calling a function is as follows:
+• Save all caller-saved registers you want to survive function call 
+(you can use push for that).
+• Store arguments in the relevant registers (rdi, rsi, etc.).
+• Invoke function using call.
+• After function returns, rax will hold the return value.
+• Restore caller-saved registers stored before the function call.

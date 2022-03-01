@@ -2,7 +2,7 @@ global print_char
 extern print_newline
 
 section .data
-    char_table: db "012345678901234567890123456780 !'#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    char_table: db "01234567890123456789012345678900 !'#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
 section .text
     print_char:
@@ -11,7 +11,6 @@ section .text
 	;затем печатаю его в stdout	
 	
 	mov rsi, rdi
-	add rsi, 1
 	add rsi, char_table
 
 	mov rax, 1
@@ -19,6 +18,4 @@ section .text
 	mov rdx, 1
 	syscall
 
-	;Вывел символ, перевожу строку
-	call print_newline
 	ret 

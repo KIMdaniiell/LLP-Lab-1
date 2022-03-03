@@ -154,9 +154,59 @@ read_char:
 ; При успехе возвращает адрес буфера в rax, длину слова в rdx.
 ; При неудаче возвращает 0 в rax
 ; Эта функция должна дописывать к слову нуль-терминатор
-
+; -> rdi - адрес начала буфера
+; -> rsi - размер буфера
+; <- rax - адрес буффера / 0
+; <- rdx - длинна слова
 read_word:
-    ret
+    mov rcx, 0
+    .read_spacing:
+	push rdi
+    	push rsi
+	push rcx 
+	call read_char
+	pop rcx
+	pop rsi
+	pop rdi
+
+	cmp rax, 0x20
+	je .read_spacing
+	cmp rax, 0x9
+	je .read_spacing
+	cmp rax, 0xA
+	je .read_spacing
+    .read:
+	test rax, rax
+	jz .end
+	cmp rax, 0x20
+	je .end
+	cmp rax, 0x9
+	je .end
+	cmp rax, 0xA
+	je .end
+	
+	dec rsi
+	jz .fail
+	
+	mov byte[rdi+rcx], al
+	inc rcx
+
+	push rdi
+    	push rsi
+	push rcx 
+	call read_char
+	pop rcx
+	pop rsi
+	pop rdi
+	jmp .read
+    .fail:
+	xor rax, rax
+	ret
+    .end:
+	mov byte[rdi+rcx], 0
+	mov rdx, rcx
+	mov rax, rdi
+	ret
  
 
 ; Принимает указатель на строку, пытается

@@ -213,11 +213,32 @@ read_word:
 ; прочитать из её начала беззнаковое число.
 ; Возвращает в rax: число, rdx : его длину в символах
 ; rdx = 0 если число прочитать не удалось
+; -> rdi - указатель на строку
+; <- rax - число
+; <- rdx - длина в символах / 0
 parse_uint:
     xor rax, rax
-    ret
+    xor rcx, rcx
+    xor rsi, rsi
+    mov r8, 10
+    .loop:	
+	mov sil, [rdi+rcx]
 
+	test sil, sil
+	jz .end
+	cmp sil, '0'
+	jl .end
+	cmp sil, '9'
+	jg .end
 
+	sub sil, '0'
+	mul r8
+	add rax, rsi
+	inc rcx
+	jmp .loop
+    .end:
+	mov rdx, rcx
+	ret
 
 
 ; Принимает указатель на строку, пытается

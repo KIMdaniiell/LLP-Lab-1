@@ -38,9 +38,17 @@ print_string:
     
 
 ; Принимает код символа и выводит его в stdout
+; -> rdi - код символа
 print_char:
-    xor rax, rax
+    push rdi
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, rsp
+    mov rdx, 1
+    syscall
+    pop rdi
     ret
+
 
 ; Переводит строку (выводит символ с кодом 0xA)
 print_newline:

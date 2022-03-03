@@ -85,10 +85,22 @@ print_uint:
     ret
     
 
-; Выводит знаковое 8-байтовое число в десятичном формате 
+; Выводит знаковое 8-байтовое число в десятичном формате
+; -> rdi - 8-байтовое знаковое число 
 print_int:
-    xor rax, rax
+    cmp rdi, 0
+    jge .print
+    .change_sign:
+	push rdi
+	mov rdi, 45		; ASCII(45) ~ '-'
+	call print_char
+	pop rdi
+	neg rdi
+    .print:
+	call print_uint
     ret
+
+
 
 ; Принимает два указателя на нуль-терминированные строки, возвращает 1 если они равны, 0 иначе
 string_equals:

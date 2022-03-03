@@ -246,9 +246,36 @@ parse_uint:
 ; Если есть знак, пробелы между ним и числом не разрешены.
 ; Возвращает в rax: число, rdx : его длину в символах (включая знак, если он был) 
 ; rdx = 0 если число прочитать не удалось
+; -> rdi - указатель на строку
+; <- rax - число
+; <- rdx - длина в символах / 0
 parse_int:
     xor rax, rax
-    ret 
+    .read_sign:
+	mov al, [rdi]
+	cmp al,'-'
+	je .read_neg
+	cmp ah, '0'
+	jl .read_pos
+	cmp ah, '9'
+	jg .read_pos
+    .read_neg:
+	inc rdi
+	push rdi
+	call parse_uint
+	pop rdi
+	cmp rdx, 0
+	jz .end
+	neg rax
+	inc rdx
+	jmp .end
+    .read_pos:
+	push rdi
+	call parse_uint
+	pop rdi
+    .end:
+	ret
+	
 
 ; Принимает указатель на строку, указатель на буфер и длину буфера
 ; Копирует строку в буфер

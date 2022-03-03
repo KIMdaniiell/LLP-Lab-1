@@ -60,9 +60,30 @@ print_newline:
 ; Выводит беззнаковое 8-байтовое число в десятичном формате 
 ; Совет: выделите место в стеке и храните там результаты деления
 ; Не забудьте перевести цифры в их ASCII коды.
+; -> rdi - 8-байтовое беззнаковое число 
 print_uint:
-    xor rax, rax
+    mov rax, rdi
+    mov r8, 10
+    
+    mov rdi, rsp			
+    sub rsp, 20+1	;8-байт число занимает не более 20 символов в 10 формате + 1 байт на 0-терм.
+
+    dec rdi
+    mov byte[rdi], 0
+    .loop:
+	xor rdx,rdx
+	div r8
+	add dl, '0'
+	dec rdi
+	mov byte[rdi], dl
+	test rax, rax
+	jnz .loop
+
+    call print_string
+
+    add rsp, 21
     ret
+    
 
 ; Выводит знаковое 8-байтовое число в десятичном формате 
 print_int:

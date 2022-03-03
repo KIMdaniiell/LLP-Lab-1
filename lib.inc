@@ -280,6 +280,35 @@ parse_int:
 ; Принимает указатель на строку, указатель на буфер и длину буфера
 ; Копирует строку в буфер
 ; Возвращает длину строки если она умещается в буфер, иначе 0
+; -> rdi - указатель на строку
+; -> rsi - указатель на буфер
+; -> rdx - длина буфера
+; <- rax - длина строки или 0
 string_copy:
-    xor rax, rax
-    ret
+    xor rcx, rcx
+
+    push rdi
+    push rsi
+    push rdx
+    call string_length
+    pop rdx
+    pop rsi
+    pop rdi
+    push rax
+
+    cmp rdx, rax
+    jg .loop
+    .nospace:
+	pop rax
+	xor rax, rax
+	ret
+    .loop:
+	mov al, [rcx + rdi]
+	mov [rcx + rsi], al
+	cmp al, 0
+	je .end
+	inc rcx
+	jmp .loop
+    .end:
+        pop rax 
+        ret

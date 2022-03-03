@@ -6,7 +6,8 @@ section .text
 exit: 
     mov rax, 60
     syscall
-    ret 
+    ret
+    
 
 ; Принимает указатель на нуль-терминированную строку, возвращает её длину
 ; -> rdi - указатель на нуль-терминированную строку
@@ -20,11 +21,21 @@ string_length:
 	jne .loop
     .end:
         ret
+	
 
 ; Принимает указатель на нуль-терминированную строку, выводит её в stdout
+; -> rdi - указатель на нуль-терминированную строку
 print_string:
-    xor rax, rax
+    push rdi
+    call string_length
+    pop rdi
+    mov rsi, rdi
+    mov rdx, rax
+    mov rax, 1
+    mov rdi, 1
+    syscall
     ret
+    
 
 ; Принимает код символа и выводит его в stdout
 print_char:

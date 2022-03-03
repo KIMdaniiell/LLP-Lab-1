@@ -9,9 +9,17 @@ exit:
     ret 
 
 ; Принимает указатель на нуль-терминированную строку, возвращает её длину
+; -> rdi - указатель на нуль-терминированную строку
+; <- rax -длина строки
 string_length:
     xor rax, rax
-    ret
+    .loop:
+	cmp byte [rdi+rax], 0 
+	je .end
+	inc rax
+	jne .loop
+    .end:
+        ret
 
 ; Принимает указатель на нуль-терминированную строку, выводит её в stdout
 print_string:

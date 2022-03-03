@@ -126,11 +126,26 @@ string_equals:
     .end:
 	mov rax, 1
 	ret
+	
 
 ; Читает один символ из stdin и возвращает его. Возвращает 0 если достигнут конец потока
+; <- rax - символ / 0
 read_char:
-    xor rax, rax
-    ret 
+    push byte 0
+    mov rax, 0
+    mov rdi, 0
+    mov rsi, rsp
+    mov rdx, 1
+    syscall
+
+    cmp rax, -1
+    jne .end
+    mov rax, 0
+    ret
+    .end:
+	pop rax
+	ret
+	
 
 ; Принимает: адрес начала буфера, размер буфера
 ; Читает в буфер слово из stdin, пропуская пробельные символы в начале, .

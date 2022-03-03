@@ -103,9 +103,29 @@ print_int:
 
 
 ; Принимает два указателя на нуль-терминированные строки, возвращает 1 если они равны, 0 иначе
+; -> rdi - указателя на первую нуль-терминированную строку
+; -> rsi - указателя на вторую нуль-терминированную строку
+; <- rax - 1 / 0
 string_equals:
     xor rax, rax
-    ret
+    xor r8, r8
+    .loop:
+	mov al, byte[rdi]
+	mov r8b, byte[rsi]
+	cmp al, r8b
+	jne .fail
+
+	test al, al
+	jz .end
+	inc rdi
+	inc rsi
+	jmp .loop
+    .fail:
+	xor rax, rax
+	ret
+    .end:
+	mov rax, 1
+	ret
 
 ; Читает один символ из stdin и возвращает его. Возвращает 0 если достигнут конец потока
 read_char:

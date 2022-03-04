@@ -251,30 +251,33 @@ parse_uint:
 ; <- rdx - длина в символах / 0
 parse_int:
     xor rax, rax
-    .read_sign:
-	mov al, [rdi]
-	cmp al,'-'
-	je .read_neg
-	cmp ah, '0'
-	jl .read_pos
-	cmp ah, '9'
-	jg .read_pos
+    xor rdx, rdx
+    
+    mov al, [rdi]
+    cmp al,'-'
+    je .read_neg
+    cmp al,'+'
+    je .read_pos
+
+    call parse_uint
+    jmp .end
     .read_neg:
 	inc rdi
-	push rdi
 	call parse_uint
-	pop rdi
 	cmp rdx, 0
 	jz .end
 	neg rax
 	inc rdx
 	jmp .end
     .read_pos:
-	push rdi
+	inc rdi
 	call parse_uint
-	pop rdi
+	cmp rdx, 0
+	jz .end
+	inc rdx
+	jmp .end
     .end:
-	ret
+	ret 
 	
 
 ; Принимает указатель на строку, указатель на буфер и длину буфера

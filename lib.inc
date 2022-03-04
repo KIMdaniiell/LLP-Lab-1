@@ -1,13 +1,24 @@
+%define SYS_READ 0
+%define SYS_WRITE 1
+%define SYS_EXIT 60
+%define stdin 0
+%define stdout 1
+
+%define NULL_TERM 0x0
+%define SYMB_SPACE 0x20
+%define SYMB_TAB 0x9
+%define SYMB_NLINE 0xA
+
 section .text
  
- 
+
 ; Принимает код возврата и завершает текущий процесс
 ; -> rdi - код возврата
 exit: 
-    mov rax, 60
+    mov rax, SYS_EXIT
     syscall
-    ret
-    
+    ret 
+
 
 ; Принимает указатель на нуль-терминированную строку, возвращает её длину
 ; -> rdi - указатель на нуль-терминированную строку
@@ -15,13 +26,13 @@ exit:
 string_length:
     xor rax, rax
     .loop:
-	cmp byte [rdi+rax], 0 
+	cmp byte [rdi+rax], NULL_TERM
 	je .end
 	inc rax
 	jne .loop
     .end:
         ret
-	
+
 
 ; Принимает указатель на нуль-терминированную строку, выводит её в stdout
 ; -> rdi - указатель на нуль-терминированную строку
@@ -31,18 +42,18 @@ print_string:
     pop rdi
     mov rsi, rdi
     mov rdx, rax
-    mov rax, 1
-    mov rdi, 1
+    mov rax, SYS_WRITE
+    mov rdi, stdout
     syscall
     ret
-    
+
 
 ; Принимает код символа и выводит его в stdout
 ; -> rdi - код символа
 print_char:
     push rdi
-    mov rax, 1
-    mov rdi, 1
+    mov rax, SYS_WRITE
+    mov rdi, stdout
     mov rsi, rsp
     mov rdx, 1
     syscall
@@ -52,24 +63,25 @@ print_char:
 
 ; Переводит строку (выводит символ с кодом 0xA ~ 10)
 print_newline:
-    mov rdi, 10
+    mov rdi, 0xA
     call print_char
     ret
-    
+
 
 ; Выводит беззнаковое 8-байтовое число в десятичном формате 
 ; Совет: выделите место в стеке и храните там результаты деления
 ; Не забудьте перевести цифры в их ASCII коды.
 ; -> rdi - 8-байтовое беззнаковое число 
 print_uint:
+%define BUF_SIZE 21 ;8-байт число занимает не более 20 символов в 10 формате + 1 байт на 0-терм.
     mov rax, rdi
     mov r8, 10
     
     mov rdi, rsp			
-    sub rsp, 20+1	;8-байт число занимает не более 20 символов в 10 формате + 1 байт на 0-терм.
+    sub rsp, BUF_SIZE	
 
     dec rdi
-    mov byte[rdi], 0
+    mov byte[rdi], NULL_TERM
     .loop:
 	xor rdx,rdx
 	div r8
@@ -81,9 +93,9 @@ print_uint:
 
     call print_string
 
-    add rsp, 21
+    add rsp, BUF_SIZE
     ret
-    
+
 
 ; Выводит знаковое 8-байтовое число в десятичном формате
 ; -> rdi - 8-байтовое знаковое число 
@@ -92,14 +104,13 @@ print_int:
     jge .print
     .change_sign:
 	push rdi
-	mov rdi, 45		; ASCII(45) ~ '-'
+	mov rdi, '-'
 	call print_char
 	pop rdi
 	neg rdi
     .print:
 	call print_uint
     ret
-
 
 
 ; Принимает два указателя на нуль-терминированные строки, возвращает 1 если они равны, 0 иначе
@@ -128,12 +139,13 @@ string_equals:
 	ret
 	
 
+
 ; Читает один символ из stdin и возвращает его. Возвращает 0 если достигнут конец потока
 ; <- rax - символ / 0
 read_char:
     push byte 0
-    mov rax, 0
-    mov rdi, 0
+    mov rax, SYS_READ
+    mov rdi, stdin
     mov rsi, rsp
     mov rdx, 1
     syscall
@@ -145,7 +157,7 @@ read_char:
     .end:
 	pop rax
 	ret
-	
+
 
 ; Принимает: адрес начала буфера, размер буфера
 ; Читает в буфер слово из stdin, пропуская пробельные символы в начале, .
@@ -169,11 +181,11 @@ read_word:
 	pop rsi
 	pop rdi
 
-	cmp rax, 0x20
+	cmp rax, SYMB_SPACE
 	je .read_spacing
-	cmp rax, 0x9
+	cmp rax, SYMB_TAB
 	je .read_spacing
-	cmp rax, 0xA
+	cmp rax, SYMB_NLINE
 	je .read_spacing
     .read:
 	test rax, rax
@@ -203,10 +215,10 @@ read_word:
 	xor rax, rax
 	ret
     .end:
-	mov byte[rdi+rcx], 0
+	mov byte[rdi+rcx], NULL_TERM
 	mov rdx, rcx
 	mov rax, rdi
-	ret
+	ret	
  
 
 ; Принимает указатель на строку, пытается
@@ -252,7 +264,7 @@ parse_uint:
 parse_int:
     xor rax, rax
     xor rdx, rdx
-    
+
     mov al, [rdi]
     cmp al,'-'
     je .read_neg
@@ -278,7 +290,7 @@ parse_int:
 	jmp .end
     .end:
 	ret 
-	
+
 
 ; Принимает указатель на строку, указатель на буфер и длину буфера
 ; Копирует строку в буфер
@@ -308,8 +320,8 @@ string_copy:
     .loop:
 	mov al, [rcx + rdi]
 	mov [rcx + rsi], al
-	cmp al, 0
-	je .end
+	test al, al
+	jz .end
 	inc rcx
 	jmp .loop
     .end:
